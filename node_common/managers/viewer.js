@@ -1,3 +1,7 @@
+import { grpc } from "@improbable-eng/grpc-web";
+import { WebsocketTransport } from "@textile/grpc-transport";
+grpc.setDefaultTransport(WebsocketTransport());
+
 import * as Utilities from "~/node_common/utilities";
 import * as Data from "~/node_common/data";
 import * as Constants from "~/node_common/constants";
@@ -15,6 +19,43 @@ export const getById = async ({ id }) => {
 
   if (user.error) {
     return null;
+  }
+
+  let info = {};
+  let status = {};
+  let errors = [];
+  let jobs = [];
+
+  const {
+    buckets,
+    bucketKey,
+    bucketName,
+    bucketRoot,
+  } = await Utilities.getBucketAPIFromUserToken(user.data.tokens.api);
+
+  try {
+    info = await buckets.archiveInfo(bucketRoot.root.key);
+  } catch (e) {
+    errors.push({ decorator: "INFO", message: e.message, code: e.code });
+  }
+
+  try {
+    status = await buckets.archiveStatus(bucketRoot.root.key);
+  } catch (e) {
+    errors.push({ decorator: "STATUS", message: e.message, code: e.code });
+  }
+
+  try {
+    buckets.archiveWatch(bucketRoot.root.key, (job) => {
+      if (!job) {
+        return;
+      }
+
+      job.id = job.id ? job.id : "UNDEFINED";
+      jobs.push(job);
+    });
+  } catch (e) {
+    errors.push({ decorator: "JOB", message: e.message, code: e.code });
   }
 
   // TODO(jim): You can serialize this last because you will have all the information
@@ -92,5 +133,11 @@ export const getById = async ({ id }) => {
     subscribers: r2.serializedSubscribers,
     trusted: r3.serializedTrusted,
     pendingTrusted: r4.serializedPendingTrusted,
+    archive: {
+      info,
+      status,
+      errors,
+      jobs,
+    },
   };
 };

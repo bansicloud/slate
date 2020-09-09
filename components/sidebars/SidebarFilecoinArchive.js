@@ -8,12 +8,13 @@ import * as System from "~/components/system";
 import { css } from "@emotion/react";
 
 export default class SidebarFilecoinArchive extends React.Component {
+  state = { response: "" };
+
   async componentDidMount() {}
 
   _handleMakeDeal = async () => {
     const response = await Actions.archive();
-    console.log(response);
-    alert("TODO: Still working on archiving issues.");
+    this.setState({ response });
   };
 
   _handleSubmit = async (e) => {
@@ -23,7 +24,8 @@ export default class SidebarFilecoinArchive extends React.Component {
 
     this.props.onSidebarLoading(true);
     await this._handleMakeDeal();
-    await this.props.onSubmit({});
+    await this.props.onRehydrate();
+    this.props.onSidebarLoading(false);
   };
 
   _handleCancel = () => {
@@ -35,8 +37,6 @@ export default class SidebarFilecoinArchive extends React.Component {
   };
 
   render() {
-    console.log(this.props);
-
     return (
       <React.Fragment>
         <System.P
@@ -60,6 +60,10 @@ export default class SidebarFilecoinArchive extends React.Component {
         >
           Make storage deal
         </System.ButtonPrimary>
+
+        <div style={{ whiteSpace: "pre-wrap", marginTop: 48 }}>
+          {JSON.stringify(this.state.response, null, 2)}
+        </div>
       </React.Fragment>
     );
   }

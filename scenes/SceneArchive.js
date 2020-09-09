@@ -28,18 +28,9 @@ export default class SceneArchive extends React.Component {
             },
           ]}
         >
-          <System.Table
-            data={{
-              columns: [
-                {
-                  key: "job",
-                  name: "Job ID",
-                  width: "100%",
-                },
-              ],
-              rows: [],
-            }}
-          />
+          <div style={{ padding: 24 }}>
+            {JSON.stringify(this.props.viewer.archive, null, 2)}
+          </div>
         </Section>
       </ScenePage>
     );
